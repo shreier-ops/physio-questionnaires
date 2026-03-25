@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שאלוני פיזיותרפיה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --primary: #2d5a3d;
+    --primary-light: #3d7a54;
+    --accent: #c8a96e;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --border: #ddd8d0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HOME */
+  #home { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  .home-header { text-align: center; margin-bottom: 48px; }
+  .logo { width: 60px; height: 60px; background: var(--primary); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px; }
+  .home-header h1 { font-size: 2rem; font-weight: 800; color: var(--primary); }
+  .home-header p { color: var(--text-muted); margin-top: 8px; }
+  .category-section { margin-bottom: 32px; }
+  .category-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
+  .q-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 10px; }
+  .q-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.2s; }
+  .q-card:hover { border-color: var(--primary); box-shadow: 0 4px 20px rgba(45,90,61,0.12); transform: translateY(-1px); }
+  .q-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .q-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
+  .q-card span { font-size: 0.78rem; color: var(--text-muted); }
+
+  /* QUESTIONNAIRE SCREEN */
+  #qscreen { display: none; min-height: 100vh; }
+  .qheader { background: var(--primary); color: white; padding: 14px 20px; position: sticky; top: 0; z-index: 100; }
+  .qheader-inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .back-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-family: 'Heebo', sans-serif; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; }
+  .back-btn:hover { background: rgba(255,255,255,0.25); }
+  .qheader h2 { flex: 1; font-size: 1rem; font-weight: 700; }
+  .progress-wrap { max-width: 760px; margin: 8px auto 0; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
+
+  .qcontent { max-width: 760px; margin: 0 auto; padding: 28px 20px; }
+  .intro-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; color: #555; font-size: 0.9rem; line-height: 1.7; }
+
+  /* Patient */
+  .patient-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; }
+  .box-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .patient-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Question card */
+  .qcard { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; }
+  .qcard.done { border-color: var(--primary-light); }
+  .qnum { font-size: 0.7rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .qtext { font-weight: 600; font-size: 0.97rem; margin-bottom: 14px; line-height: 1.5; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 7px; }
+  .opt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; line-height: 1.4; transition: all 0.15s; }
+  .opt:hover { background: #e8f0eb; border-color: var(--primary); }
+  .opt input[type=radio] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+  .opt.selected { background: #e8f0eb; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+  /* Binary */
+  .binary-row { display: flex; gap: 10px; }
+  .bin-btn { padding: 10px 24px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; font-family: 'Heebo', sans-serif; font-size: 0.95rem; transition: all 0.15s; }
+  .bin-btn:hover { border-color: var(--primary); }
+  .bin-yes { background: #e8f0eb; border-color: var(--primary); color: var(--primary); font-weight: 700; }
+  .bin-no { background: #f5f5f5; border-color: #aaa; color: #555; }
+
+  /* Scale */
+  .scale-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scale-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg); font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.15s; color: var(--text-muted); }
+  .scale-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .scale-btn.selected { background: var(--primary); border-color: var(--primary); color: white; }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #888; margin-top: 5px; }
+
+  /* Text input */
+  .text-inp { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: 0.9rem; background: var(--bg); outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+  .text-inp:focus { border-color: var(--primary); }
+
+  /* Submit */
+  .submit-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-top: 24px; }
+  .submit-box h3 { font-weight: 700; margin-bottom: 14px; }
+  .score-display { background: #e8f0eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 0.95rem; color: var(--primary); font-weight: 600; display: none; }
+  .btn-primary { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-secondary { width: 100%; padding: 11px; background: transparent; color: var(--primary); border: 1.5px solid var(--primary); border-radius: 10px; font-family: 'Heebo', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; }
+  .btn-secondary:hover { background: #e8f0eb; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--primary); color: white; padding: 12px 24px; border-radius: 50px; font-weight: 600; z-index: 999; transition: transform 0.3s; white-space: nowrap; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  input:focus { outline: none; border-color: var(--primary) !important; }
+  @media(max-width:600px) { .patient-fields { grid-template-columns: 1fr; } .home-header h1 { font-size: 1.5rem; } }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <div class="home-header">
+    <div class="logo">🩺</div>
+    <h1>שאלוני פיזיותרפיה</h1>
+    <p>בחר/י שאלון למילוי ושליחה למטפל/ת</p>
+  </div>
+  <div id="categories-container"></div>
+</div>
+
+<!-- QUESTIONNAIRE SCREEN -->
+<div id="qscreen">
+  <div class="qheader">
+    <div class="qheader-inner">
+      <button class="back-btn" onclick="goHome()">← חזרה</button>
+      <h2 id="qscreen-title"></h2>
+      <span id="qscreen-count" style="font-size:0.82rem;opacity:0.85"></span>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <div class="qcontent">
+    <div class="intro-box" id="qscreen-intro"></div>
+    <div class="patient-box">
+      <div class="box-label">פרטי מטופל/ת</div>
+      <div class="patient-fields">
+        <input class="text-inp" id="patient-name" placeholder="שם מלא" style="margin:0">
+        <input class="text-inp" id="patient-date" placeholder="תאריך" style="margin:0">
+      </div>
+    </div>
+    <div id="questions-container"></div>
+    <div class="submit-box">
+      <h3>שליחה למטפל/ת</h3>
+      <div class="score-display" id="score-display"></div>
+      <input class="text-inp" id="therapist-email" type="email" placeholder="כתובת מייל של המטפל/ת">
+      <button class="btn-primary" onclick="handleSend()">📧 שלח/י למטפל/ת</button>
+      <button class="btn-secondary" onclick="handleCopy()">📋 העתק תשובות</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {
+  categories: [
+    { label: "צוואר", keys: ["ndi"] },
+    { label: "גב תחתון", keys: ["oswestry","rolandmorris"] },
+    { label: "גף עליון", keys: ["quickdash"] },
+    { label: "גף תחתון", keys: ["womac"] },
+    { label: "קרסול", keys: ["cait"] },
+    { label: "איכות חיים", keys: ["groc","fabq","psfs"] }
+  ],
+  questionnaires: {
+    ndi: {
+      title: "Neck Disability Index", subtitle: "שאלון תפקוד צווארי · 10 שאלות", icon: "🦴",
+      intro: "בכל סעיף בחר/י תשובה אחת בלבד שמתארת באופן הטוב ביותר את מצבך היום.",
+      type: "radio",
+      questions: [
+        { text: "עוצמת הכאב", opts: ["אין לי כאבים כרגע","הכאב חלש מאד","הכאב בעוצמה בינונית","הכאב די חמור","הכאב חמור מאד","הכאב בלתי נסבל"] },
+        { text: "טיפוח אישי (רחצה, לבוש)", opts: ["מסוגל/ת לדאוג לעצמי ללא כאב","מסוגל/ת לדאוג לעצמי אך עם כאב","הדאגה לעצמי מכאיבה ואני איטי/ה","זקוק/ה לעזרה מסוימת","זקוק/ה לעזרה יום-יומית","אינני מסוגל/ת להתלבש, נשאר/ת במיטה"] },
+        { text: "הרמה", opts: ["מרים/ה משאות כבדים ללא כאב","מרים/ה משאות כבדים עם כאב","לא מהרצפה אך כן מגובה נוח","לא כבד, כן קל-בינוני ממקום נוח","מרים/ה רק משאות קלים מאד","לא יכול/ה להרים כלל"] },
+        { text: "קריאה", opts: ["קורא/ת כמה שארצה ללא כאב","קורא/ת עם כאב קל","קורא/ת עם כאב בינוני","לא יכול/ה לקרוא הרבה בשל כאב בינוני","בקושי קורא/ת בשל כאב חמור","לא יכול/ה לקרוא כלל"] },
+        { text: "כאב ראש", opts: ["אין כאבי ראש כלל","כאבי ראש קלים לעיתים רחוקות","כאבי ראש בינוניים לעיתים רחוקות","כאבי ראש בינוניים לעיתים קרובות","כאבי ראש חמורים לעיתים קרובות","כאבי ראש כמעט כל הזמן"] },
+        { text: "ריכוז", opts: ["מתרכז/ת באופן מלא ללא קושי","מתרכז/ת עם מעט קושי","קושי סביר להתרכז","קושי רב להתרכז","קושי עצום להתרכז","אינני מסוגל/ת להתרכז כלל"] },
+        { text: "עבודה", opts: ["עובד/ת ככל שרוצה/ה","מבצע/ת רק עבודה שגרתית","מבצע/ת רוב העבודה השגרתית","לא מסוגל/ת לעבודה השגרתית","בקושי מסוגל/ת לעבוד","אינני יכול/ה לעבוד כלל"] },
+        { text: "נהיגה", opts: ["נוהג/ת ללא כאב","נוהג/ת עם כאב קל","נוהג/ת עם כאב בינוני","לא יכול/ה לנהוג הרבה בשל כאב בינוני","בקושי נוהג/ת בשל כאב חמור","אינני יכול/ה לנהוג כלל"] },
+        { text: "שינה", opts: ["אין בעיות שינה","מופרעת מעט (פחות משעה)","מופרעת מתון (1–2 שעות)","מופרעת בינונית (2–3 שעות)","מופרעת חמור (3–5 שעות)","מופרעת לחלוטין (5–7 שעות)"] },
+        { text: "שעות הפנאי", opts: ["עוסק/ת בכל פעולות הפנאי ללא כאב","עוסק/ת בכל פעולות הפנאי עם כאב קל","עוסק/ת ברוב פעולות הפנאי","עוסק/ת במעט פעולות פנאי","בקושי מסוגל/ת לפעילות פנאי","אינני מסוגל/ת לפעילות פנאי כלל"] }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+v,0);
+        const pct = Math.round((raw/50)*100);
+        const lbl = pct<=9?"ללא מגבלה":pct<=29?"מגבלה קלה":pct<=49?"מגבלה בינונית":pct<=69?"מגבלה חמורה":"מוגבלות מלאה";
+        return `📊 ציון: ${pct}/100 – ${lbl}`;
+      }
+    },
+    oswestry: {
+      title: "Oswestry", subtitle: "שאלון כאב גב תחתון · 10 שאלות", icon: "🦴",
+      intro: "בכל סעיף בחר/י תשובה אחת בלבד.",
+      type: "radio",
+      questions: [
+        { text: "עצמת הכאב כרגע", opts: ["אין כאב","הכאב מינימלי","הכאב בינוני","הכאב חזק","הכאב עז","הכאב הנורא ביותר"] },
+        { text: "תפקוד יומיומי (רחצה, לבוש)", opts: ["מסוגל/ת ללא כאב נוסף","מסוגל/ת אך עם כאב","כואב ואני איטי/ה וזהיר/ה","זקוק/ה לעזרה, מתפקד/ת ברוב הפונקציות","זקוק/ה לעזרה יומיומית","אינני מסוגל/ת, נשאר/ת במיטה"] },
+        { text: "הרמת משאות", opts: ["מרים/ה כבד ללא כאב","מרים/ה כבד עם כאב","לא מהרצפה, כן מגובה נוח","לא כבד, כן קל-בינוני ממקום נוח","מרים/ה רק קלים מאוד","אינני יכול/ה להרים כלל"] },
+        { text: "הליכה", opts: ["הולך/ת כל מרחק","לא יותר מ-1.6 ק\"מ","לא יותר מ-400 מ'","לא יותר מ-100 מ'","רק עם מקל","רוב הזמן במיטה"] },
+        { text: "ישיבה", opts: ["יושב/ת בכל כיסא כל הזמן","יושב/ת בכסא חביב כל הזמן","לא יותר משעה","לא יותר מחצי שעה","לא יותר מ-10 דקות","אינני יכול/ה לשבת כלל"] },
+        { text: "עמידה", opts: ["עומד/ת כל הזמן ללא כאב","עומד/ת כל הזמן עם כאב קל","לא יותר משעה","לא יותר מחצי שעה","לא יותר מ-10 דקות","הכאב מונע ממני לעמוד"] },
+        { text: "שינה", opts: ["שינה ללא הפרעה","מופרעת לפעמים","ישן/ה פחות מ-6 שעות","ישן/ה פחות מ-4 שעות","ישן/ה פחות משעתיים","אינני ישן/ה כלל"] },
+        { text: "חיי מין", opts: ["נורמלי ללא כאב נוסף","נורמלי אך עם כאב נוסף","כמעט נורמלי אך כואב","מוגבל/ת מאוד","כמעט לא קיים","הכאב מונע כל חיי מין"] },
+        { text: "חיי חברה", opts: ["נורמלי ללא כאב נוסף","נורמלי אך עם כאב נוסף","השפעה רק על פעילויות אקטיביות","יוצא/ת פחות","מוגבל/ת לבית","כמעט ללא חיי חברה"] },
+        { text: "טיולים", opts: ["מטייל/ת לכל מקום ללא כאב","מטייל/ת לכל מקום עם כאב","יכול/ה ליותר משעתיים","פחות משעה","יציאות הכרחיות בלבד","לא יוצא/ת כלל"] }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+v,0);
+        return `📊 ציון: ${Math.round((raw/50)*100)}%`;
+      }
+    },
+    rolandmorris: {
+      title: "Roland Morris", subtitle: "שאלון מגבלה בגב · 24 שאלות", icon: "🦴",
+      intro: "סמן/ני ✓ ליד כל משפט שמתאר לך היום.",
+      type: "binary",
+      questions: [
+        { text: "אני נשאר/ת בבית רוב הזמן בשל כאב גב" },
+        { text: "אני משנה/ה תנוחה לעיתים תכופות כדי להרגיש נוח" },
+        { text: "אני הולך/ת לאט יותר מהרגיל בשל כאב גב" },
+        { text: "אינני מבצע/ת עבודות בית שגרתיות בשל כאב גב" },
+        { text: "אני אחז/ה במעקה לעלות מדרגות בשל כאב גב" },
+        { text: "אני נשכב/ת לנוח לעיתים תכופות יותר בשל כאב גב" },
+        { text: "אני צריך/ה להחזיק במשהו כדי לצאת מהכיסא" },
+        { text: "אני מנסה/ה שאחרים יבצעו דברים עבורי" },
+        { text: "אני מתלבש/ת לאט יותר בשל כאב גב" },
+        { text: "אני עומד/ת רק לזמנים קצרים בשל כאב גב" },
+        { text: "אני מנסה/ה לא להתכופף או לשבת על הרצפה" },
+        { text: "קשה לי לקום מהכיסא בשל כאב גב" },
+        { text: "הגב שלי כואב רוב הזמן" },
+        { text: "קשה לי להתהפך במיטה בשל כאב גב" },
+        { text: "התיאבון שלי ירוד בשל כאב גב" },
+        { text: "מתקשה/ה לנעול גרביים ונעלים בשל כאב גב" },
+        { text: "אני הולך/ת רק מרחקים קצרים בשל כאב גב" },
+        { text: "אני ישן/ה פחות טוב בשל כאב גב" },
+        { text: "מתלבש/ת בעזרת מישהו אחר בשל כאב גב" },
+        { text: "אני יושב/ת רוב היום בשל כאב גב" },
+        { text: "אני נמנע/ת מעבודות בית כבדות בשל כאב גב" },
+        { text: "אני יותר עצבני/ת ומתוח/ה בשל כאב גב" },
+        { text: "עולה במדרגות לאט יותר בשל כאב גב" },
+        { text: "אני נשאר/ת במיטה רוב הזמן בשל כאב גב" }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+v,0);
+        return `📊 ציון: ${raw}/24`;
+      }
+    },
+    quickdash: {
+      title: "QuickDASH", subtitle: "גף עליון · 11 שאלות", icon: "💪",
+      intro: "דרג/י את יכולתך לבצע את הפעילויות הבאות בשבוע האחרון.",
+      type: "radio",
+      questions: [
+        { text: "פתיחת צנצנת חדשה או עם סגירה מהודקת", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "ביצוע עבודות בית קשות (שטיפת קירות, רצפות)", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "נשיאת שקית קניות או תיק כבד", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "רחיצת גבך", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "שימוש בסכין לחיתוך אוכל", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "פעילות פנאי עם כוח דרך הזרוע (טניס, מטקות, פטיש)", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת"] },
+        { text: "עד כמה הפריעה הבעיה בפעילות חברתית?", opts: ["כלל לא","במידה מעטה","במידה בינונית","במידה רבה","במידה קיצונית"] },
+        { text: "האם היית מוגבל/ת בעבודה כתוצאה מהבעיה?", opts: ["כלל לא","מעט","בינוני","מאוד","לא מסוגל/ת"] },
+        { text: "כאב בזרוע, כתף או יד", opts: ["כלל לא","מעט","בינוני","חמור","קיצוני"] },
+        { text: "עיקצוצים (סיכות ומחטים) בזרוע/כתף/יד", opts: ["כלל לא","מעט","בינוני","חמור","קיצוני"] },
+        { text: "קושי בשינה בשל הבעיה בזרוע/כתף/יד", opts: ["ללא קושי","קושי קל","קושי בינוני","קושי חמור","לא מסוגל/ת לישון"] }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+(v+1),0);
+        const dash = Math.round(((raw-11)/44)*100);
+        return `📊 ציון QuickDASH: ${dash}/100`;
+      }
+    },
+    womac: {
+      title: "WOMAC", subtitle: "ברך / ירך · 24 שאלות", icon: "🦵",
+      intro: "התייחס/י לתסמינים שחשת ב-48 השעות האחרונות.",
+      type: "radio",
+      questions: [
+        { text: "כאב בהליכה על משטח ישר", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "כאב בעלייה/ירידה במדרגות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "כאב בלילה שגרם להתעוררות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "כאב בישיבה או בשכיבה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "כאב בעמידה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "נוקשות בבוקר לאחר השינה", opts: ["ללא","קלה","בינונית","חמורה","קיצונית"] },
+        { text: "נוקשות לאחר ישיבה/שכיבה/מנוחה", opts: ["ללא","קלה","בינונית","חמורה","קיצונית"] },
+        { text: "קושי בירידה במדרגות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בעלייה במדרגות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בקימה מהכיסא", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בעמידה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בכיפוף לרצפה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בהליכה על משטח ישר", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בכניסה/יציאה מרכב", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בקניות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בלבישת גרביים", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בקימה מהמיטה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בפשיטת גרביים", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בשכיבה במיטה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בכניסה/יציאה מאמבטיה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בישיבה", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בישיבה/קימה משירותים", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בביצוע עבודות בית קשות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] },
+        { text: "קושי בביצוע עבודות בית קלות", opts: ["ללא","קל","בינוני","חמור","קיצוני"] }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+v,0);
+        return `📊 ציון: ${raw}/96`;
+      }
+    },
+    cait: {
+      title: "CAIT", subtitle: "Cumberland – קרסול · 9 שאלות", icon: "🦶",
+      intro: "השאלון מעריך אי-יציבות פונקציונלית בקרסול.",
+      type: "radio",
+      questions: [
+        { text: "יש לי כאב בקרסולי", opts: ["אף פעם (5)","לפעמים בספורט (4)","לפעמים ביום-יום (3)","בספורט וביום-יום (2)","תמיד (1)"] },
+        { text: "קרסולי מרגיש לא יציב", opts: ["אף פעם (4)","לפעמים בספורט (3)","לפעמים ביום-יום (2)","לעיתים קרובות (1)","תמיד (0)"] },
+        { text: "כשפונה בחדות קרסולי לא יציב", opts: ["אף פעם (3)","לפעמים בריצה (2)","לעיתים קרובות בריצה (1)","בהליכה (0)"] },
+        { text: "בירידה במדרגות קרסולי לא יציב", opts: ["אף פעם (3)","לפעמים (2)","לעיתים קרובות (1)","תמיד (0)"] },
+        { text: "קרסולי לא יציב בעמידה על רגל אחת", opts: ["אף פעם (2)","לפעמים (1)","תמיד (0)"] },
+        { text: "קרסולי לא יציב בקפיצה ונחיתה על רגל אחת", opts: ["אף פעם (2)","לפעמים (1)","תמיד (0)"] },
+        { text: "קרסולי לא יציב בהליכה על משטח לא ישר", opts: ["אף פעם (3)","לפעמים (2)","לעיתים קרובות (1)","תמיד (0)"] },
+        { text: "כמה מוגבל/ת בפעילות בשל קרסולך?", opts: ["כלל לא (2)","מעט (1)","מאוד (0)"] },
+        { text: "כשקרסולי 'מתפתל' – עוצמת הכאב", opts: ["ללא כאב (2)","כאב קל (1)","כאב חמור (0)"] }
+      ],
+      calcScore(ans) {
+        const vals = Object.values(ans);
+        // extract numeric value from option label
+        let raw = 0;
+        const q = DATA.questionnaires.cait;
+        for (const [i, v] of Object.entries(ans)) {
+          const optText = q.questions[i].opts[v];
+          const m = optText.match(/\((\d+)\)/);
+          raw += m ? parseInt(m[1]) : 0;
+        }
+        const lbl = raw < 24 ? "אי-יציבות פונקציונלית" : "ללא אי-יציבות";
+        return `📊 ציון: ${raw}/30 – ${lbl}`;
+      }
+    },
+    groc: {
+      title: "Global Rating of Change", subtitle: "דירוג שינוי כללי · שאלה 1", icon: "⭐",
+      intro: "בהשוואה למצבך לפני שהחלת את הטיפול, כיצד תדרג/י את השינוי הכללי?",
+      type: "radio",
+      questions: [
+        { text: "דרג/י את השינוי הכללי שחשת", opts: ["שיפור עצום","שיפור רב","שיפור בינוני","שיפור קל","ללא שינוי","הידרדרות קלה","הידרדרות רבה"] }
+      ],
+      calcScore(ans) {
+        const labels = ["שיפור עצום","שיפור רב","שיפור בינוני","שיפור קל","ללא שינוי","הידרדרות קלה","הידרדרות רבה"];
+        return `📊 ${labels[ans[0]] || ""}`;
+      }
+    },
+    fabq: {
+      title: "FABQ", subtitle: "פחד-הימנעות · 16 שאלות", icon: "🧠",
+      intro: "עד כמה אתה/ת מסכים/ה עם כל הצהרה? 0 = לא מסכים/ה כלל, 6 = מסכים/ה מאוד.",
+      type: "scale",
+      scaleMin: 0, scaleMax: 6,
+      scaleMinLabel: "לא מסכים/ה", scaleMaxLabel: "מסכים/ה מאוד",
+      questions: [
+        { text: "כאבי גב הוא כאב מסוכן" },
+        { text: "כאבי עלול להחמיר אם אנסה לשים לב אליו" },
+        { text: "גופי אומר לי שיש לי משהו שגוי" },
+        { text: "כאבי לא אומר שגופי נפצע" },
+        { text: "לא בטוח שיהיה בטוח לעסוק בפעילות גופנית" },
+        { text: "כאבי היה גרוע יותר כשהייתי פעיל/ה גופנית" },
+        { text: "פעילות גופנית עלולה לפגוע בגבי" },
+        { text: "לא כדאי לי להיות פעיל/ה גופנית עם כאב כזה" },
+        { text: "לא יכולתי לעשות עבודה רגילה עם כאב כזה" },
+        { text: "עבודתי מכבידה מדי עליי" },
+        { text: "עבודתי מחמירה את כאבי" },
+        { text: "עבודתי עשויה לפגוע בגבי" },
+        { text: "לא ראוי לי לעשות עבודה רגילה עם כאב כזה" },
+        { text: "לא אוכל לעשות עבודה רגילה עד שהכאב ייעלם" },
+        { text: "לא אוכל לחזור לעבודה הרגילה תוך 3 חודשים" },
+        { text: "לא אוכל לחזור לעבודה הרגילה אם ימשיך הכאב" }
+      ],
+      calcScore(ans) {
+        const raw = Object.values(ans).reduce((s,v)=>s+v,0);
+        return `📊 ציון: ${raw}/96`;
+      }
+    },
+    psfs: {
+      title: "Patient Specific Functional Scale", subtitle: "סולם תפקודי אישי · 3 פעילויות", icon: "📊",
+      intro: "בחר/י עד 3 פעילויות שקשה לך לבצע. דרג/י כל פעילות מ-0 (לא מסוגל/ת כלל) עד 10 (מסוגל/ת כרגיל).",
+      type: "psfs",
+      questions: [
+        { text: "פעילות 1" },
+        { text: "פעילות 2" },
+        { text: "פעילות 3" }
+      ],
+      calcScore(ans) {
+        const vals = Object.values(ans);
+        if (!vals.length) return "—";
+        const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+        return `📊 ממוצע: ${avg}/10`;
+      }
+    }
+  }
+};
+
+// STATE
+let state = { key: null, answers: {}, customLabels: {} };
+
+// RENDER HOME
+function renderHome() {
+  const container = document.getElementById('categories-container');
+  container.innerHTML = '';
+  DATA.categories.forEach(cat => {
+    const sec = document.createElement('div');
+    sec.className = 'category-section';
+    sec.innerHTML = `<div class="category-title">📍 ${cat.label}</div><div class="q-grid" id="grid-${cat.label}"></div>`;
+    container.appendChild(sec);
+    const grid = sec.querySelector('.q-grid');
+    cat.keys.forEach(key => {
+      const q = DATA.questionnaires[key];
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.innerHTML = `<div class="q-icon">${q.icon}</div><div><h3>${q.title}</h3><span>${q.subtitle}</span></div>`;
+      card.onclick = () => openQ(key);
+      grid.appendChild(card);
+    });
+  });
+}
+
+function openQ(key) {
+  state = { key, answers: {}, customLabels: {} };
+  const q = DATA.questionnaires[key];
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('qscreen').style.display = 'block';
+  document.getElementById('qscreen-title').textContent = q.title;
+  document.getElementById('qscreen-intro').textContent = q.intro;
+  document.getElementById('patient-name').value = '';
+  document.getElementById('patient-date').value = '';
+  document.getElementById('therapist-email').value = '';
+  document.getElementById('score-display').style.display = 'none';
+  renderQuestions(q);
+  updateProgress();
+  window.scrollTo(0,0);
+}
+
+function renderQuestions(q) {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+  q.questions.forEach((question, idx) => {
+    const card = document.createElement('div');
+    card.className = 'qcard';
+    card.id = `qcard-${idx}`;
+
+    const num = document.createElement('div');
+    num.className = 'qnum';
+    num.textContent = `שאלה ${idx+1}`;
+    const txt = document.createElement('div');
+    txt.className = 'qtext';
+    txt.textContent = question.text;
+    card.appendChild(num);
+    card.appendChild(txt);
+
+    if (q.type === 'radio') {
+      const opts = document.createElement('div');
+      opts.className = 'options';
+      question.opts.forEach((opt, oIdx) => {
+        const label = document.createElement('label');
+        label.className = 'opt';
+        label.id = `opt-${idx}-${oIdx}`;
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = `q${idx}`;
+        radio.value = oIdx;
+        radio.addEventListener('change', () => {
+          document.querySelectorAll(`[id^="opt-${idx}-"]`).forEach(l => l.classList.remove('selected'));
+          label.classList.add('selected');
+          state.answers[idx] = oIdx;
+          document.getElementById(`qcard-${idx}`).classList.add('done');
+          updateProgress();
+          tryShowScore();
+        });
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(opt));
+        opts.appendChild(label);
+      });
+      card.appendChild(opts);
+
+    } else if (q.type === 'binary') {
+      const row = document.createElement('div');
+      row.className = 'binary-row';
+      ['✓ כן, מתאים לי','✗ לא מתאים'].forEach((label, val) => {
+        const btn = document.createElement('button');
+        btn.className = 'bin-btn';
+        btn.textContent = label;
+        btn.id = `bin-${idx}-${val}`;
+        btn.onclick = () => {
+          document.getElementById(`bin-${idx}-0`).className = 'bin-btn';
+          document.getElementById(`bin-${idx}-1`).className = 'bin-btn';
+          btn.className = val === 0 ? 'bin-btn bin-yes' : 'bin-btn bin-no';
+          state.answers[idx] = val === 0 ? 1 : 0;
+          document.getElementById(`qcard-${idx}`).classList.add('done');
+          updateProgress();
+          tryShowScore();
+        };
+        row.appendChild(btn);
+      });
+      card.appendChild(row);
+
+    } else if (q.type === 'scale') {
+      const row = document.createElement('div');
+      row.className = 'scale-row';
+      for (let v = q.scaleMin; v <= q.scaleMax; v++) {
+        const btn = document.createElement('button');
+        btn.className = 'scale-btn';
+        btn.textContent = v;
+        btn.id = `scale-${idx}-${v}`;
+        btn.onclick = () => {
+          for (let x = q.scaleMin; x <= q.scaleMax; x++)
+            document.getElementById(`scale-${idx}-${x}`).classList.remove('selected');
+          btn.classList.add('selected');
+          state.answers[idx] = v;
+          document.getElementById(`qcard-${idx}`).classList.add('done');
+          updateProgress();
+          tryShowScore();
+        };
+        row.appendChild(btn);
+      }
+      const labels = document.createElement('div');
+      labels.className = 'scale-labels';
+      labels.innerHTML = `<span>${q.scaleMinLabel}</span><span>${q.scaleMaxLabel}</span>`;
+      card.appendChild(row);
+      card.appendChild(labels);
+
+    } else if (q.type === 'psfs') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'text-inp';
+      inp.placeholder = 'תאר/י את הפעילות...';
+      inp.addEventListener('input', () => { state.customLabels[idx] = inp.value; });
+      card.appendChild(inp);
+      const row = document.createElement('div');
+      row.className = 'scale-row';
+      for (let v = 0; v <= 10; v++) {
+        const btn = document.createElement('button');
+        btn.className = 'scale-btn';
+        btn.textContent = v;
+        btn.id = `psfs-${idx}-${v}`;
+        btn.onclick = () => {
+          for (let x = 0; x <= 10; x++)
+            document.getElementById(`psfs-${idx}-${x}`).classList.remove('selected');
+          btn.classList.add('selected');
+          state.answers[idx] = v;
+          document.getElementById(`qcard-${idx}`).classList.add('done');
+          updateProgress();
+          tryShowScore();
+        };
+        row.appendChild(btn);
+      }
+      const labels = document.createElement('div');
+      labels.className = 'scale-labels';
+      labels.innerHTML = '<span>לא מסוגל/ת כלל</span><span>כרגיל</span>';
+      card.appendChild(row);
+      card.appendChild(labels);
+    }
+
+    container.appendChild(card);
+  });
+}
+
+function updateProgress() {
+  const q = DATA.questionnaires[state.key];
+  const total = q.questions.length;
+  const done = Object.keys(state.answers).length;
+  document.getElementById('qscreen-count').textContent = `${done}/${total}`;
+  document.getElementById('progress-fill').style.width = `${(done/total)*100}%`;
+}
+
+function tryShowScore() {
+  const q = DATA.questionnaires[state.key];
+  const total = q.questions.length;
+  const done = Object.keys(state.answers).length;
+  if (done < total) return;
+  const el = document.getElementById('score-display');
+  el.textContent = q.calcScore(state.answers);
+  el.style.display = 'block';
+}
+
+function buildBody() {
+  const q = DATA.questionnaires[state.key];
+  const name = document.getElementById('patient-name').value || 'לא צוין';
+  const date = document.getElementById('patient-date').value || new Date().toLocaleDateString('he-IL');
+  const scoreEl = document.getElementById('score-display');
+  let body = `שאלון: ${q.title}\nמטופל/ת: ${name}\nתאריך: ${date}\n`;
+  if (scoreEl.style.display !== 'none') body += `תוצאה: ${scoreEl.textContent}\n`;
+  body += '\n--- תשובות ---\n\n';
+  q.questions.forEach((question, idx) => {
+    body += `${idx+1}. ${question.text}`;
+    if (state.customLabels[idx]) body += ` – ${state.customLabels[idx]}`;
+    body += '\n';
+    const v = state.answers[idx];
+    if (v !== undefined) {
+      if (q.type === 'radio') body += `   ${question.opts[v]}\n`;
+      else if (q.type === 'binary') body += `   ${v === 1 ? '✓ כן' : '✗ לא'}\n`;
+      else if (q.type === 'scale' || q.type === 'psfs') body += `   ציון: ${v}\n`;
+    } else body += `   לא נענה\n`;
+    body += '\n';
+  });
+  return body;
+}
+
+function handleSend() {
+  const email = document.getElementById('therapist-email').value.trim();
+  if (!email) { showToast('⚠️ יש להזין כתובת מייל'); return; }
+  const q = DATA.questionnaires[state.key];
+  const name = document.getElementById('patient-name').value || 'מטופל/ת';
+  const subject = encodeURIComponent(`שאלון ${q.title} – ${name}`);
+  const body = encodeURIComponent(buildBody());
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  showToast('✅ נפתחת תוכנת המייל');
+}
+
+function handleCopy() {
+  navigator.clipboard.writeText(buildBody())
+    .then(() => showToast('✅ הועתק ללוח'))
+    .catch(() => showToast('❌ לא ניתן להעתיק'));
+}
+
+function goHome() {
+  document.getElementById('qscreen').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+renderHome();
+</script>
+</body>
+</html>
