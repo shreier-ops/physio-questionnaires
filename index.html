@@ -110,7 +110,15 @@
     <div class="logo">🩺</div>
     <h1>שאלוני פיזיותרפיה</h1>
     <p>בחר/י שאלון למילוי ושליחה למטפל/ת</p>
+    <button onclick="togglePanel()" style="margin-top:14px;padding:9px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer;">🔗 קישורים לשליחה למטופלים</button>
   </div>
+
+  <div id="therapist-panel" style="display:none;background:white;border:1.5px solid var(--border);border-radius:14px;padding:24px;margin-bottom:36px;">
+    <div style="font-weight:700;font-size:1.05rem;margin-bottom:6px;">קישורים ישירים לשאלונים</div>
+    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:18px;">כל קישור פותח שאלון ספציפי — שלח/י למטופל ויראה רק אותו.</div>
+    <div id="links-list"></div>
+  </div>
+
   <div id="categories-container"></div>
 </div>
 
@@ -387,6 +395,97 @@ const DATA = {
 let state = { key: null, answers: {}, customLabels: {} };
 
 // RENDER HOME
+function togglePanel() {
+  const panel = document.getElementById('therapist-panel');
+  const isHidden = panel.style.display === 'none';
+  if (isHidden) {
+    renderLinks();
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function renderLinks() {
+  const container = document.getElementById('links-list');
+  container.innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;">כתובת האתר שלך ב-GitHub Pages:</div>
+      <input id="base-url-input" type="text"
+        placeholder="https://your-username.github.io/physio-questionnaires"
+        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:0.88rem;background:var(--bg);box-sizing:border-box;"
+        oninput="refreshLinks()" />
+      <div style="font-size:0.75rem;color:#aaa;margin-top:5px;">הכנס את הכתובת המלאה — הקישורים יתעדכנו אוטומטית</div>
+    </div>
+    <div id="links-rows"></div>
+  `;
+}
+
+function refreshLinks() {
+  const base = (document.getElementById("base-url-input")?.value || "").trim().replace(/\/$/, "");
+  const rowsEl = document.getElementById("links-rows");
+  if (!rowsEl || !base) return;
+  rowsEl.innerHTML = "";
+  DATA.categories.forEach(cat => {
+    cat.keys.forEach(key => {
+      const q = DATA.questionnaires[key];
+      const url = base + "?q=" + key;
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:9px;margin-bottom:8px;background:var(--bg);";
+      const btn = document.createElement("button");
+      btn.textContent = "העתק";
+      btn.style.cssText = "padding:7px 14px;background:var(--primary);color:white;border:none;border-radius:7px;font-family:Heebo,sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0";
+      btn.onclick = () => copyLink(url, btn);
+      row.innerHTML = `
+        <span style="font-size:18px;flex-shrink:0">${q.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:0.9rem">${q.title}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${url}</div>
+        </div>
+      `;
+      row.appendChild(btn);
+      rowsEl.appendChild(row);
+    });
+  });
+}
+
+function copyLink(url, btn) {
+  // Method 1: modern clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      flashCopied(btn);
+    }).catch(() => fallbackCopy(url, btn));
+  } else {
+    fallbackCopy(url, btn);
+  }
+}
+
+function fallbackCopy(url, btn) {
+  // Method 2: textarea trick — works on all mobile browsers
+  const ta = document.createElement('textarea');
+  ta.value = url;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, 99999); // for mobile
+  try {
+    document.execCommand('copy');
+    flashCopied(btn);
+  } catch(e) {
+    // Method 3: show the URL so user can copy manually
+    prompt('העתק את הקישור:', url);
+  }
+  document.body.removeChild(ta);
+}
+
+function flashCopied(btn) {
+  btn.textContent = '✓ הועתק';
+  btn.style.background = '#3d7a54';
+  setTimeout(() => { btn.textContent = 'העתק'; btn.style.background = 'var(--primary)'; }, 2000);
+}
+
 function renderHome() {
   const container = document.getElementById('categories-container');
   container.innerHTML = '';
@@ -618,7 +717,14 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-renderHome();
+// Check URL param ?q=key to open a specific questionnaire directly
+const urlParams = new URLSearchParams(window.location.search);
+const qParam = urlParams.get('q');
+if (qParam && DATA.questionnaires[qParam]) {
+  openQ(qParam);
+} else {
+  renderHome();
+}
 </script>
 </body>
 </html>
