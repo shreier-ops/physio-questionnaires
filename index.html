@@ -408,23 +408,14 @@ function togglePanel() {
 
 function renderLinks() {
   const container = document.getElementById('links-list');
-  container.innerHTML = `
-    <div style="margin-bottom:16px;">
-      <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;">כתובת האתר שלך ב-GitHub Pages:</div>
-      <input id="base-url-input" type="text"
-        placeholder="https://your-username.github.io/physio-questionnaires"
-        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:0.88rem;background:var(--bg);box-sizing:border-box;"
-        oninput="refreshLinks()" />
-      <div style="font-size:0.75rem;color:#aaa;margin-top:5px;">הכנס את הכתובת המלאה — הקישורים יתעדכנו אוטומטית</div>
-    </div>
-    <div id="links-rows"></div>
-  `;
+  container.innerHTML = `<div id="links-rows"></div>`;
+  refreshLinks();
 }
 
 function refreshLinks() {
-  const base = (document.getElementById("base-url-input")?.value || "").trim().replace(/\/$/, "");
+  const base = "https://shreier-ops.github.io/physio-questionnaires";
   const rowsEl = document.getElementById("links-rows");
-  if (!rowsEl || !base) return;
+  if (!rowsEl) return;
   rowsEl.innerHTML = "";
   DATA.categories.forEach(cat => {
     cat.keys.forEach(key => {
