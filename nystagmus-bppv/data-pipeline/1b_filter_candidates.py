@@ -23,7 +23,7 @@ print(f"Before filter: {len(rows)}")
 
 filtered = []
 for r in rows:
-    dur = int(r.get("duration") or 0)
+    dur = int(float(r.get("duration") or 0))
     title = r.get("title", "").lower()
     if dur > 300:
         continue
