@@ -45,7 +45,7 @@ def main():
             continue
         cmd = [
             "yt-dlp", v["url"],
-            "-f", "best[height<=720][ext=mp4]/best[ext=mp4]/best",
+            "-f", "best[height<=360][ext=mp4]/best[height<=480][ext=mp4]/worst[ext=mp4]/worst",
             "-o", str(out),
             "--no-warnings",
             "--quiet",
