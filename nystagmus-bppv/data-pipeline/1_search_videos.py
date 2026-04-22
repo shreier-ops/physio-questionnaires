@@ -12,28 +12,38 @@ from pathlib import Path
 from tqdm import tqdm
 
 QUERIES = [
-    # BPPV - posterior canal
-    "posterior canal BPPV nystagmus dix-hallpike",
-    "right posterior canal BPPV",
-    "left posterior canal BPPV",
-    # BPPV - horizontal canal
-    "horizontal canal BPPV geotropic roll test",
-    "horizontal canal BPPV apogeotropic",
-    "lateral canal BPPV nystagmus",
-    "cupulolithiasis nystagmus",
-    # Other vestibular pathologies (for "other_nystagmus" class)
-    "vestibular neuritis nystagmus",
-    "Meniere's disease nystagmus video",
-    "central nystagmus stroke",
-    "downbeat nystagmus",
-    "direction changing nystagmus",
-    "spontaneous nystagmus",
-    # General teaching
-    "BPPV patient nystagmus eye movement",
-    "nystagmus types neurology",
+    # Posterior canal - close-up eye movement during Dix-Hallpike
+    "dix-hallpike nystagmus eye close up patient",
+    "posterior canal BPPV nystagmus eye movement examination",
+    "right posterior BPPV dix-hallpike positive eye",
+    "left posterior BPPV dix-hallpike eye nystagmus",
+    "BPPV nystagmus upbeat torsional eye",
+
+    # Horizontal canal - close-up eye movement during roll test
+    "horizontal canal BPPV nystagmus eye roll test close",
+    "geotropic nystagmus eye movement patient",
+    "apogeotropic nystagmus eye movement examination",
+    "lateral canal BPPV roll test eye nystagmus",
+    "cupulolithiasis nystagmus eye close up",
+
+    # Other vestibular - close-up eye movement
+    "vestibular neuritis nystagmus eye examination close",
+    "spontaneous nystagmus eye movement patient",
+    "central nystagmus eye movement downbeat",
+    "direction changing nystagmus eye close up",
+    "Meniere nystagmus eye movement",
 ]
 
-MAX_PER_QUERY = 50  # Per query - total will be larger
+MAX_PER_QUERY = 50
+
+# Exclude titles with these words - lectures, tutorials, anatomy, maneuvers without eye footage
+EXCLUDE_TITLE_WORDS = [
+    "lecture", "tutorial", "explained", "what is", "anatomy", "animation",
+    "how to perform", "how to do", "epley", "semont", "barbecue", "brandt",
+    "treatment", "therapy", "relief", "cure", "exercise", "yoga",
+    "causes", "symptoms", "overview", "introduction", "what causes",
+    "3d", "animation", "diagram", "illustration", "drawing",
+]
 OUTPUT = Path(__file__).parent / "output" / "candidates.csv"
 
 
@@ -85,11 +95,19 @@ def main():
                 seen_ids.add(v["video_id"])
                 all_videos.append(v)
 
-    # Filter: keep only videos between 5 sec and 30 min (likely to contain nystagmus)
-    filtered = [v for v in all_videos if 5 <= (v["duration"] or 0) <= 1800]
+    # Filter 1: duration 5 seconds to 5 minutes (clinical exam clips, not lectures)
+    filtered = [v for v in all_videos if 5 <= (v["duration"] or 0) <= 300]
+
+    # Filter 2: exclude titles that match lecture/treatment/non-exam keywords
+    def is_exam_video(title: str) -> bool:
+        t = title.lower()
+        return not any(w in t for w in EXCLUDE_TITLE_WORDS)
+
+    filtered = [v for v in filtered if is_exam_video(v["title"])]
 
     print(f"\nFound {len(all_videos)} unique videos")
-    print(f"After duration filter (5s-30m): {len(filtered)}")
+    print(f"After duration filter (5s-5min): {len([v for v in all_videos if 5 <= (v['duration'] or 0) <= 300])}")
+    print(f"After excluding lectures/treatments: {len(filtered)}")
 
     with open(OUTPUT, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(filtered[0].keys()) if filtered else [])
