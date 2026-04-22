@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3b82f6">
+<title>BPPV Detector</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --primary: #3b82f6;
+    --primary-light: #60a5fa;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column;
+  }
+  .screen { flex: 1; display: none; flex-direction: column; padding: 24px; overflow-y: auto; }
+  .screen.active { display: flex; }
+  h1 { font-size: 1.6rem; margin-bottom: 8px; color: var(--primary-light); }
+  h2 { font-size: 1.3rem; margin: 16px 0 12px; }
+  p { color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; font-size: 0.95rem; }
+  button {
+    font: inherit; cursor: pointer; border: none; border-radius: 12px;
+    padding: 14px 20px; font-weight: 600; transition: transform 0.1s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; width: 100%; font-size: 1.05rem; margin-top: 12px; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-secondary { background: var(--surface2); color: var(--text); width: 100%; margin-top: 8px; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-warning { background: var(--warning); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .lang-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0;
+  }
+  .lang-btn {
+    background: var(--surface); padding: 16px; text-align: center;
+    border: 2px solid var(--border); border-radius: 12px;
+    color: var(--text); font-size: 1rem; font-weight: 500;
+  }
+  .lang-btn.selected { border-color: var(--primary); background: var(--surface2); }
+  .test-card {
+    background: var(--surface); padding: 18px; margin: 10px 0;
+    border-radius: 14px; border: 2px solid var(--border); cursor: pointer;
+  }
+  .test-card:active { background: var(--surface2); }
+  .test-card h3 { color: var(--primary-light); margin-bottom: 6px; font-size: 1.05rem; }
+  .test-card p { font-size: 0.85rem; margin: 0; }
+  .disclaimer {
+    background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning);
+    padding: 14px; border-radius: 10px; margin: 16px 0; font-size: 0.85rem;
+    color: var(--warning);
+  }
+  .video-wrap {
+    position: relative; flex: 1; min-height: 300px; max-height: 60vh;
+    background: black; border-radius: 14px; overflow: hidden; margin: 16px 0;
+  }
+  #video, #canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scaleX(-1);
+  }
+  .countdown {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 5rem; font-weight: bold; color: white;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 10;
+  }
+  .recording-indicator {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--danger); padding: 6px 12px; border-radius: 20px;
+    font-size: 0.8rem; color: white; display: flex; align-items: center; gap: 6px;
+    z-index: 10;
+  }
+  .rec-dot {
+    width: 8px; height: 8px; background: white; border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .progress-bar {
+    height: 4px; background: var(--surface2); border-radius: 2px;
+    overflow: hidden; margin: 12px 0;
+  }
+  .progress-fill {
+    height: 100%; background: var(--primary); transition: width 0.1s;
+  }
+  .result-card {
+    background: var(--surface); padding: 24px; border-radius: 16px;
+    margin: 16px 0; border-left: 4px solid var(--primary);
+  }
+  .result-card.success { border-left-color: var(--success); }
+  .result-card.warning { border-left-color: var(--warning); }
+  .result-card.danger { border-left-color: var(--danger); }
+  .confidence {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 0.85rem; color: var(--text-muted);
+  }
+  .conf-bar {
+    flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden;
+  }
+  .conf-fill { height: 100%; background: var(--primary); }
+  .feature-debug {
+    background: var(--surface2); padding: 12px; border-radius: 8px;
+    font-family: monospace; font-size: 0.75rem; margin-top: 12px;
+    max-height: 200px; overflow-y: auto;
+  }
+  .maneuver-step {
+    background: var(--surface); padding: 16px; margin: 10px 0;
+    border-radius: 12px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .step-num {
+    background: var(--primary); color: white; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; flex-shrink: 0;
+  }
+  .step-text { flex: 1; font-size: 0.9rem; line-height: 1.5; }
+  .footer {
+    text-align: center; padding: 12px; font-size: 0.75rem; color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- Screen 1: Language selection -->
+<div class="screen active" id="screen-lang">
+  <h1 id="lang-title">Select Language</h1>
+  <div class="lang-grid" id="lang-grid"></div>
+  <button class="btn-primary" id="lang-continue">Continue</button>
+</div>
+
+<!-- Screen 2: Welcome + disclaimer -->
+<div class="screen" id="screen-welcome">
+  <h1 id="w-title"></h1>
+  <p id="w-subtitle"></p>
+  <div class="disclaimer" id="w-disclaimer"></div>
+  <button class="btn-primary" id="w-start"></button>
+</div>
+
+<!-- Screen 3: Test selection -->
+<div class="screen" id="screen-test">
+  <h2 id="t-title"></h2>
+  <div class="test-card" data-test="dh_right">
+    <h3>Dix-Hallpike →</h3>
+    <p id="t-dh-right"></p>
+  </div>
+  <div class="test-card" data-test="dh_left">
+    <h3>Dix-Hallpike ←</h3>
+    <p id="t-dh-left"></p>
+  </div>
+  <div class="test-card" data-test="roll">
+    <h3>Roll Test</h3>
+    <p id="t-roll"></p>
+  </div>
+</div>
+
+<!-- Screen 4: Recording -->
+<div class="screen" id="screen-record">
+  <p id="r-instructions"></p>
+  <div class="video-wrap">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div class="countdown" id="countdown"></div>
+    <div class="recording-indicator" id="rec-ind" style="display:none">
+      <div class="rec-dot"></div><span>REC</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="rec-progress"></div></div>
+  <div id="r-status" style="text-align:center; color: var(--text-muted); font-size: 0.85rem"></div>
+</div>
+
+<!-- Screen 5: Result -->
+<div class="screen" id="screen-result">
+  <div class="result-card" id="result-card">
+    <h2 id="result-title"></h2>
+    <p id="result-desc"></p>
+    <div class="confidence">
+      <span id="conf-label">Confidence:</span>
+      <div class="conf-bar"><div class="conf-fill" id="conf-fill"></div></div>
+      <span id="conf-pct"></span>
+    </div>
+    <div class="feature-debug" id="feature-debug" style="display:none"></div>
+  </div>
+  <button class="btn-primary" id="show-maneuver" style="display:none"></button>
+  <button class="btn-secondary" id="retry-btn"></button>
+</div>
+
+<!-- Screen 6: Maneuver -->
+<div class="screen" id="screen-maneuver">
+  <h2 id="m-title"></h2>
+  <div id="m-steps"></div>
+  <button class="btn-secondary" id="m-back"></button>
+</div>
+
+<div class="footer">v0.1 • Clinical support tool</div>
+
+<!-- Translations -->
+<script src="i18n.js"></script>
+
+<!-- Maneuver instructions (multi-language) -->
+<script>
+const MANEUVERS = {
+  epley_right: {
+    he: ["שב/י זקוף עם רגליים מושטות", "סובב/י את הראש 45° ימינה", "שכב/י אחורה במהירות, ראש משתפל מעבר למיטה", "המתן/י 30 שניות עד שהסחרחורת חולפת", "סובב/י את הראש 90° שמאלה (סה\"כ 45° שמאלה)", "המתן/י 30 שניות", "סובב/י גוף וראש שמאלה כך שמסתכל/ת לרצפה", "המתן/י 30 שניות", "שב/י לאט עם ראש מורד", "חזור/חזרי 3 פעמים. אל תיטה/י את הראש 24 שעות"],
+    en: ["Sit upright with legs extended", "Turn head 45° to the right", "Lie back quickly, head hanging off bed", "Wait 30 seconds until vertigo subsides", "Turn head 90° to the left (now 45° left)", "Wait 30 seconds", "Turn body and head left so face looks at floor", "Wait 30 seconds", "Slowly sit up with head down", "Repeat 3 times. Do not tilt head for 24 hours"],
+  },
+  epley_left: {
+    he: ["שב/י זקוף עם רגליים מושטות", "סובב/י את הראש 45° שמאלה", "שכב/י אחורה במהירות, ראש משתפל", "המתן/י 30 שניות", "סובב/י את הראש 90° ימינה", "המתן/י 30 שניות", "סובב/י גוף וראש ימינה לרצפה", "המתן/י 30 שניות", "שב/י לאט", "חזור/חזרי 3 פעמים"],
+    en: ["Sit upright with legs extended", "Turn head 45° to the left", "Lie back quickly, head hanging", "Wait 30 seconds", "Turn head 90° to the right", "Wait 30 seconds", "Turn body and head right toward floor", "Wait 30 seconds", "Slowly sit up", "Repeat 3 times"],
+  },
+  bbq: {
+    he: ["שכב/י על הגב", "סובב/י לאט 90° לצד הבריא", "המתן/י 30 שניות בכל תנוחה", "המשך/י לסובב 90° נוספים (פנים לרצפה)", "סובב/י עוד 90° (לצד החולה)", "סובב/י עוד 90° (חזרה לגב)", "שב/י לאט"],
+    en: ["Lie on your back", "Slowly roll 90° to the unaffected side", "Wait 30 seconds in each position", "Continue rolling 90° (face down)", "Roll another 90° (to affected side)", "Roll another 90° (back to supine)", "Slowly sit up"],
+  },
+};
+
+// Add minimal placeholder translations for other 9 languages (fallback to English)
+["zh","hi","es","fr","ar","bn","ru","pt","ur"].forEach(l => {
+  Object.keys(MANEUVERS).forEach(m => {
+    if (!MANEUVERS[m][l]) MANEUVERS[m][l] = MANEUVERS[m].en;
+  });
+});
+</script>
+
+<!-- MediaPipe + main app logic -->
+<script type="module">
+import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/vision_bundle.mjs";
+
+// ============= STATE =============
+let lang = localStorage.getItem("bppv_lang") || "he";
+let landmarker = null;
+let videoStream = null;
+let trajectory = [];
+let recordingActive = false;
+let currentTest = null;
+let lastResult = null;
+
+// ============= INIT =============
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = LANGS[l].dir;
+  localStorage.setItem("bppv_lang", l);
+  applyTranslations();
+}
+
+function applyTranslations() {
+  document.getElementById("w-title").textContent = t("title", lang);
+  document.getElementById("w-subtitle").textContent = t("subtitle", lang);
+  document.getElementById("w-disclaimer").textContent = t("disclaimer", lang);
+  document.getElementById("w-start").textContent = t("start", lang);
+  document.getElementById("t-title").textContent = t("selectTest", lang);
+  document.getElementById("t-dh-right").textContent = t("dhRight", lang);
+  document.getElementById("t-dh-left").textContent = t("dhLeft", lang);
+  document.getElementById("t-roll").textContent = t("rollTest", lang);
+  document.getElementById("conf-label").textContent = t("confidence", lang) + ":";
+  document.getElementById("retry-btn").textContent = t("retry", lang);
+  document.getElementById("show-maneuver").textContent = t("showManeuver", lang);
+  document.getElementById("m-back").textContent = t("retry", lang);
+}
+
+function buildLangGrid() {
+  const grid = document.getElementById("lang-grid");
+  grid.innerHTML = "";
+  Object.entries(LANGS).forEach(([code, info]) => {
+    const btn = document.createElement("button");
+    btn.className = "lang-btn" + (code === lang ? " selected" : "");
+    btn.textContent = info.name;
+    btn.onclick = () => {
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      setLang(code);
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ============= MEDIAPIPE =============
+async function initMediaPipe() {
+  if (landmarker) return landmarker;
+  const filesetResolver = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/wasm"
+  );
+  landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+    baseOptions: {
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      delegate: "GPU",
+    },
+    outputFaceBlendshapes: false,
+    runningMode: "VIDEO",
+    numFaces: 1,
+  });
+  return landmarker;
+}
+
+async function startCamera() {
+  videoStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+    audio: false,
+  });
+  const video = document.getElementById("video");
+  video.srcObject = videoStream;
+  await new Promise(r => video.onloadedmetadata = r);
+  await video.play();
+}
+
+function stopCamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+}
+
+// ============= TRACKING =============
+function trackFrame(timestamp) {
+  const video = document.getElementById("video");
+  if (!recordingActive || !video.videoWidth) return;
+
+  const result = landmarker.detectForVideo(video, timestamp);
+  if (result.faceLandmarks && result.faceLandmarks.length > 0) {
+    const lm = result.faceLandmarks[0];
+    // Iris: right 469-472, left 474-477. Eye ref: 33 (right outer), 263 (left outer)
+    const rx = (lm[469].x + lm[470].x + lm[471].x + lm[472].x) / 4;
+    const ry = (lm[469].y + lm[470].y + lm[471].y + lm[472].y) / 4;
+    const lx = (lm[474].x + lm[475].x + lm[476].x + lm[477].x) / 4;
+    const ly = (lm[474].y + lm[475].y + lm[476].y + lm[477].y) / 4;
+    const ipd = Math.hypot(lm[263].x - lm[33].x, lm[263].y - lm[33].y);
+    if (ipd > 1e-6) {
+      trajectory.push([rx / ipd, ry / ipd, lx / ipd, ly / ipd, performance.now()]);
+    }
+  } else {
+    trajectory.push([NaN, NaN, NaN, NaN, performance.now()]);
+  }
+
+  requestAnimationFrame(() => trackFrame(performance.now()));
+}
+
+// ============= FEATURE EXTRACTION (mirrors Python) =============
+function computeFeatures(traj) {
+  const valid = traj.filter(r => !isNaN(r[0]));
+  if (valid.length < 30) return null;
+  const fps = valid.length / ((valid[valid.length - 1][4] - valid[0][4]) / 1000);
+
+  // Center
+  const mean = [0, 0, 0, 0];
+  valid.forEach(r => { for (let i = 0; i < 4; i++) mean[i] += r[i]; });
+  for (let i = 0; i < 4; i++) mean[i] /= valid.length;
+  const centered = valid.map(r => [r[0] - mean[0], r[1] - mean[1], r[2] - mean[2], r[3] - mean[3]]);
+
+  // Velocity
+  const dt = 1 / fps;
+  const vx = [], vy = [];
+  for (let i = 1; i < centered.length; i++) {
+    vx.push(((centered[i][0] - centered[i-1][0]) + (centered[i][2] - centered[i-1][2])) / 2 / dt);
+    vy.push(((centered[i][1] - centered[i-1][1]) + (centered[i][3] - centered[i-1][3])) / 2 / dt);
+  }
+
+  const peak_h = Math.max(...vx.map(Math.abs));
+  const peak_v = Math.max(...vy.map(Math.abs));
+  const std_x = Math.sqrt(vx.reduce((s, v) => s + v*v, 0) / vx.length);
+  const std_y = Math.sqrt(vy.reduce((s, v) => s + v*v, 0) / vy.length);
+
+  const beats_right = vx.filter(v => v > 0.5 * std_x).length;
+  const beats_left = vx.filter(v => v < -0.5 * std_x).length;
+  const beats_up = vy.filter(v => v < -0.5 * std_y).length;
+  const beats_down = vy.filter(v => v > 0.5 * std_y).length;
+
+  // Net direction
+  const h_net = beats_right - beats_left;
+  const v_net = beats_up - beats_down;
+
+  // Frequency via zero crossings
+  let cross = 0;
+  for (let i = 1; i < vx.length; i++) {
+    if ((vx[i] > 0) !== (vx[i-1] > 0)) cross++;
+  }
+  const freq = cross / 2 / (vx.length / fps);
+
+  return {
+    fps, peak_h, peak_v, std_x, std_y,
+    beats_right, beats_left, beats_up, beats_down,
+    h_net, v_net, freq,
+    duration_sec: vx.length / fps,
+    valid_ratio: valid.length / traj.length,
+  };
+}
+
+// ============= RULE-BASED CLASSIFIER (placeholder until trained model) =============
+function classify(feats, test) {
+  // Threshold: significant nystagmus needs sustained beats and frequency in range
+  const nystagmus_present = feats.peak_h > 0.3 || feats.peak_v > 0.3;
+  const significant = (feats.beats_right + feats.beats_left + feats.beats_up + feats.beats_down) > 5
+                       && feats.freq > 0.5 && feats.freq < 5;
+
+  if (!nystagmus_present || !significant) {
+    return { class: "no_nystagmus", confidence: 0.7, reasoning: "Low velocity / no beats" };
+  }
+
+  // Determine direction
+  const horiz_dominant = Math.abs(feats.h_net) > Math.abs(feats.v_net);
+
+  // Out-of-range frequency, no clear pattern → other
+  if (feats.freq > 8 || feats.valid_ratio < 0.5) {
+    return { class: "other_nystagmus", confidence: 0.6, reasoning: "Atypical pattern" };
+  }
+
+  if (horiz_dominant) {
+    // Horizontal canal - need to know head position to determine geo/apogeio
+    // Without that context, return horizontal with lower confidence
+    if (test === "roll") {
+      return { class: "horizontal_geo", confidence: 0.55,
+               reasoning: "Horizontal beats during roll test (geo/apogeio distinction needs head position)" };
+    }
+    return { class: "horizontal_geo", confidence: 0.45, reasoning: "Horizontal beats" };
+  }
+
+  // Vertical/torsional → posterior canal
+  if (feats.beats_up > feats.beats_down) {
+    // Upbeat - posterior canal
+    if (test === "dh_right") {
+      return { class: "posterior_right", confidence: 0.7, reasoning: "Upbeat during right Dix-Hallpike" };
+    }
+    if (test === "dh_left") {
+      return { class: "posterior_left", confidence: 0.7, reasoning: "Upbeat during left Dix-Hallpike" };
+    }
+    return { class: "posterior_right", confidence: 0.4, reasoning: "Upbeat (test side unknown)" };
+  }
+
+  // Downbeat → other (could be central or anterior canal - both warrant referral)
+  return { class: "other_nystagmus", confidence: 0.65,
+           reasoning: "Downbeat nystagmus - atypical for posterior BPPV, referral recommended" };
+}
+
+// ============= UI FLOW =============
+async function startTest(testKey) {
+  currentTest = testKey;
+  trajectory = [];
+  show("screen-record");
+  document.getElementById("r-instructions").textContent = t("recordingInstructions", lang) + " 3";
+  document.getElementById("r-status").textContent = "";
+
+  try {
+    await Promise.all([initMediaPipe(), startCamera()]);
+  } catch (e) {
+    alert("Camera/MediaPipe error: " + e.message);
+    show("screen-test");
+    return;
+  }
+
+  // Countdown
+  for (let n = 3; n > 0; n--) {
+    document.getElementById("countdown").textContent = n;
+    await sleep(1000);
+  }
+  document.getElementById("countdown").textContent = "";
+  document.getElementById("rec-ind").style.display = "flex";
+
+  // Record for 10 seconds
+  recordingActive = true;
+  trajectory = [];
+  trackFrame(performance.now());
+
+  const total = 10000;
+  const start = performance.now();
+  while (performance.now() - start < total) {
+    document.getElementById("rec-progress").style.width = ((performance.now() - start) / total * 100) + "%";
+    await sleep(50);
+  }
+  recordingActive = false;
+  document.getElementById("rec-ind").style.display = "none";
+  stopCamera();
+
+  // Analyze
+  document.getElementById("r-status").textContent = t("analyzing", lang);
+  await sleep(300);
+  const feats = computeFeatures(trajectory);
+  if (!feats) {
+    alert(t("analyzing", lang) + " failed - face not detected. Retrying...");
+    show("screen-test");
+    return;
+  }
+  const result = classify(feats, currentTest);
+  lastResult = { feats, result, test: currentTest };
+  showResult(result, feats);
+}
+
+function showResult(result, feats) {
+  show("screen-result");
+  const card = document.getElementById("result-card");
+  const title = document.getElementById("result-title");
+  const desc = document.getElementById("result-desc");
+  card.className = "result-card";
+
+  const showManeuverBtn = document.getElementById("show-maneuver");
+  showManeuverBtn.style.display = "none";
+
+  if (result.class === "no_nystagmus") {
+    card.classList.add("success");
+    title.textContent = t("noNystagmus", lang);
+    desc.textContent = "✅ " + result.reasoning;
+  } else if (result.class === "other_nystagmus") {
+    card.classList.add("danger");
+    title.textContent = "⚠️ " + (lang === "he" ? "פנייה לרופא מומלצת"
+                                : lang === "ar" ? "يوصى بمراجعة الطبيب"
+                                : lang === "ur" ? "ڈاکٹر سے رجوع کی سفارش"
+                                : "Physician referral recommended");
+    desc.textContent = lang === "he"
+      ? "דפוס תנועת העין אינו מתאים לסחרחורת ממקור קריסטלים. מומלץ לפנות לרופא לבירור רפואי."
+      : "The eye movement pattern doesn't match crystal-related vertigo. Please consult a physician.";
+  } else if (result.class.startsWith("posterior")) {
+    card.classList.add("warning");
+    title.textContent = t("canalPosterior", lang) + " (" + t(result.class.endsWith("right") ? "right" : "left", lang) + ")";
+    desc.textContent = result.reasoning;
+    showManeuverBtn.style.display = "block";
+    showManeuverBtn.dataset.maneuver = result.class.endsWith("right") ? "epley_right" : "epley_left";
+  } else if (result.class.startsWith("horizontal")) {
+    card.classList.add("warning");
+    title.textContent = t("canalHorizontal", lang);
+    desc.textContent = result.reasoning;
+    showManeuverBtn.style.display = "block";
+    showManeuverBtn.dataset.maneuver = "bbq";
+  }
+
+  // Confidence bar
+  const pct = Math.round(result.confidence * 100);
+  document.getElementById("conf-fill").style.width = pct + "%";
+  document.getElementById("conf-pct").textContent = pct + "%";
+
+  // Feature debug (hide by default - useful for clinicians)
+  document.getElementById("feature-debug").textContent =
+    `Beats: R=${feats.beats_right} L=${feats.beats_left} U=${feats.beats_up} D=${feats.beats_down}\n` +
+    `Peak velocity: H=${feats.peak_h.toFixed(2)} V=${feats.peak_v.toFixed(2)}\n` +
+    `Frequency: ${feats.freq.toFixed(2)} Hz\n` +
+    `Valid frames: ${(feats.valid_ratio * 100).toFixed(0)}%`;
+}
+
+function showManeuver(name) {
+  show("screen-maneuver");
+  document.getElementById("m-title").textContent =
+    name === "bbq" ? t("bbq", lang) : t("epley", lang);
+  const steps = MANEUVERS[name][lang] || MANEUVERS[name].en;
+  const container = document.getElementById("m-steps");
+  container.innerHTML = "";
+  steps.forEach((step, i) => {
+    const div = document.createElement("div");
+    div.className = "maneuver-step";
+    div.innerHTML = `<div class="step-num">${i+1}</div><div class="step-text">${step}</div>`;
+    container.appendChild(div);
+  });
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ============= EVENT BINDINGS =============
+buildLangGrid();
+setLang(lang);
+
+document.getElementById("lang-continue").onclick = () => show("screen-welcome");
+document.getElementById("w-start").onclick = () => show("screen-test");
+document.querySelectorAll(".test-card").forEach(card => {
+  card.onclick = () => startTest(card.dataset.test);
+});
+document.getElementById("retry-btn").onclick = () => show("screen-test");
+document.getElementById("show-maneuver").onclick = (e) => showManeuver(e.target.dataset.maneuver);
+document.getElementById("m-back").onclick = () => show("screen-test");
+
+// PWA service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
