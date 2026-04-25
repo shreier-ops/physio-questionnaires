@@ -12,8 +12,8 @@ from collections import Counter
 
 INPUT = Path(__file__).parent / "output" / "labeled_for_review.csv"
 
-AUTO_APPROVE_THRESHOLD = 0.85
-AUTO_REJECT_THRESHOLD = 0.40
+AUTO_APPROVE_THRESHOLD = 0.70   # approve more → more training data
+AUTO_REJECT_THRESHOLD = 0.35
 SKIP_LABELS = {"unclear", "not_relevant", "horizontal_unknown", "posterior_unknown"}
 
 rows = list(csv.DictReader(open(INPUT, encoding="utf-8")))
@@ -47,6 +47,23 @@ print("\nAuto-approved class distribution:")
 for k, v in sorted(dist.items()):
     bar = "█" * min(v, 30)
     print(f"  {k:25s} {v:3d}  {bar}")
+
+import random
+# Spot-check: show 15 random auto-approved videos so you can validate the system
+spot = random.sample(approved_rows, min(15, len(approved_rows)))
+print(f"\n{'='*70}")
+print("SPOT CHECK - review these 15 random auto-approved videos:")
+print("If most look correct, the auto-approval is working well.")
+print(f"{'='*70}")
+for i, r in enumerate(spot, 1):
+    print(f"\n[{i}/15] {r['title'][:70]}")
+    print(f"  Label: {r['auto_label']}  Confidence: {r['final_confidence']}")
+    print(f"  URL: {r['url']}")
+    ok = input("  Looks correct? (y/n/relabel:CLASS) [default=y]: ").strip() or "y"
+    if ok == "n":
+        r["YOUR_DECISION"] = "reject"
+    elif ok.startswith("relabel:"):
+        r["YOUR_DECISION"] = ok
 
 # Print borderline videos for manual review
 if needs_review:
