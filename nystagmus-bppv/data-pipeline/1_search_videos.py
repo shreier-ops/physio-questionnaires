@@ -36,10 +36,16 @@ QUERIES = [
     "horizontal canal BPPV apogeotropic eye examination",
     "ageotropic nystagmus roll test eye",
 
+    # horizontal_apogeio - extra queries for rare class
+    "cupulolithiasis horizontal canal eye nystagmus patient",
+    "apogeotropic BPPV nystagmus eye close examination",
+    "ageotropic nystagmus eye horizontal canal",
+
     # no_nystagmus - negative tests
-    "dix-hallpike negative no nystagmus normal",
-    "BPPV negative test normal eye movement",
-    "dix-hallpike normal eye no vertigo patient",
+    "dix-hallpike negative no nystagmus normal eye",
+    "BPPV negative test normal eye movement patient",
+    "dix-hallpike normal result eye no nystagmus",
+    "negative dix hallpike eye examination normal",
 
     # other_nystagmus - non-BPPV (limited to 20)
     "vestibular neuritis nystagmus eye examination",
