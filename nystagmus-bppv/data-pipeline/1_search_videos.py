@@ -12,37 +12,52 @@ from pathlib import Path
 from tqdm import tqdm
 
 QUERIES = [
-    # Posterior canal - close-up eye movement during Dix-Hallpike
-    "dix-hallpike nystagmus eye close up patient",
-    "posterior canal BPPV nystagmus eye movement examination",
-    "right posterior BPPV dix-hallpike positive eye",
-    "left posterior BPPV dix-hallpike eye nystagmus",
-    "BPPV nystagmus upbeat torsional eye",
+    # posterior_right - ממוקד מאוד
+    "right posterior canal BPPV dix-hallpike nystagmus eye",
+    "dix-hallpike right positive nystagmus patient eye",
+    "right BPPV upbeat torsional nystagmus examination",
+    "right posterior canalolithiasis nystagmus eye close",
 
-    # Horizontal canal - close-up eye movement during roll test
-    "horizontal canal BPPV nystagmus eye roll test close",
-    "geotropic nystagmus eye movement patient",
-    "apogeotropic nystagmus eye movement examination",
-    "lateral canal BPPV roll test eye nystagmus",
-    "cupulolithiasis nystagmus eye close up",
+    # posterior_left - ממוקד מאוד
+    "left posterior canal BPPV dix-hallpike nystagmus eye",
+    "dix-hallpike left positive nystagmus patient eye",
+    "left BPPV upbeat torsional nystagmus examination",
+    "left posterior canalolithiasis nystagmus eye close",
 
-    # Other vestibular - close-up eye movement
-    "vestibular neuritis nystagmus eye examination close",
-    "spontaneous nystagmus eye movement patient",
-    "central nystagmus eye movement downbeat",
-    "direction changing nystagmus eye close up",
-    "Meniere nystagmus eye movement",
+    # horizontal_geo - geotropic
+    "geotropic nystagmus roll test eye close up",
+    "horizontal canal BPPV geotropic eye movement patient",
+    "canalolithiasis horizontal canal nystagmus eye",
+    "BBQ roll test positive nystagmus eye",
+
+    # horizontal_apogeio - apogeotropic
+    "apogeotropic nystagmus roll test eye patient",
+    "cupulolithiasis nystagmus eye movement close",
+    "horizontal canal BPPV apogeotropic eye examination",
+    "ageotropic nystagmus roll test eye",
+
+    # no_nystagmus - negative tests
+    "dix-hallpike negative no nystagmus normal",
+    "BPPV negative test normal eye movement",
+    "dix-hallpike normal eye no vertigo patient",
+
+    # other_nystagmus - non-BPPV (limited to 20)
+    "vestibular neuritis nystagmus eye examination",
+    "spontaneous nystagmus eye patient close up",
+    "downbeat nystagmus eye movement close",
 ]
 
 MAX_PER_QUERY = 50
 
-# Exclude titles with these words - lectures, tutorials, anatomy, maneuvers without eye footage
+# Cap per class to avoid imbalance
+MAX_PER_CLASS = 30
+
 EXCLUDE_TITLE_WORDS = [
     "lecture", "tutorial", "explained", "what is", "anatomy", "animation",
     "how to perform", "how to do", "epley", "semont", "barbecue", "brandt",
     "treatment", "therapy", "relief", "cure", "exercise", "yoga",
     "causes", "symptoms", "overview", "introduction", "what causes",
-    "3d", "animation", "diagram", "illustration", "drawing",
+    "3d", "diagram", "illustration", "drawing",
 ]
 OUTPUT = Path(__file__).parent / "output" / "candidates.csv"
 

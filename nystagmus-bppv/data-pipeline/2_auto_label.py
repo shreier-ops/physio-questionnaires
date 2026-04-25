@@ -168,6 +168,9 @@ def validate_with_comments(comments: list[dict]) -> tuple[float, int, int, str]:
 
 def main():
     rows_out = []
+    class_counts: dict[str, int] = {}
+    CLASS_CAP = 30  # max videos per class to keep dataset balanced
+
     with open(INPUT, "r", encoding="utf-8") as f:
         reader = list(csv.DictReader(f))
 
@@ -177,6 +180,11 @@ def main():
         # Skip irrelevant videos
         if label in ("not_relevant",):
             continue
+
+        # Cap per class to avoid imbalance
+        if class_counts.get(label, 0) >= CLASS_CAP:
+            continue
+        class_counts[label] = class_counts.get(label, 0) + 1
 
         # Comment validation (slow - only for relevant)
         comments = fetch_top_comments(row["url"])
